@@ -1,65 +1,50 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sales Reporting Form</title>
+  <title>Sales Reporting</title>
 </head>
 <body>
-  <h2>Sales Reporting</h2>
+  <h1>Sales Form</h1>
   <form id="salesForm">
-    <label for="item">Item Sold:</label><br />
-    <input type="text" id="item" name="item" required /><br /><br />
-
-    <label for="quantity">Quantity:</label><br />
-    <input type="number" id="quantity" name="quantity" required /><br /><br />
-
-    <label for="amount">Total Amount:</label><br />
-    <input type="number" id="amount" name="amount" step="0.01" required /><br /><br />
-
-    <button type="submit">Submit & Send WhatsApp</button>
+    <input type="text" name="name" placeholder="Name" required><br><br>
+    <input type="number" name="amount" placeholder="Amount" required><br><br>
+    <button type="submit">Submit</button>
   </form>
 
-  <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycbyUsJaiwUCZTd4u092QOsE77_ILikdDPG-CLjcLD14YDIXcVJibj5c3m7Aetj7dJDod/exec";
-    const whatsappNumber = "254722868475"; // Kenya number without '+'
+  <p id="response"></p>
 
-    document.getElementById("salesForm").addEventListener("submit", async (e) => {
+  <script>
+    document.getElementById('salesForm').addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      const item = e.target.item.value.trim();
-      const quantity = e.target.quantity.value.trim();
-      const amount = e.target.amount.value.trim();
-
-      // Prepare JSON payload
-      const payload = { item, quantity, amount };
+      let formData = {
+        name: e.target.name.value,
+        amount: e.target.amount.value
+      };
 
       try {
-        // Send JSON data to Google Apps Script
-        const response = await fetch(scriptURL, {
+        await fetch("https://script.google.com/macros/s/AKfycbwrhfxOESAeo-a_65_-hUcgLTvuvCPwSx-TPM_Tq8BigdL66lq2A8TS6gx3MNbFkQ/exec", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
+          mode: "no-cors", // Prevent CORS block
+          body: JSON.stringify(formData)
         });
 
-        if (!response.ok) throw new Error("Failed to send data");
+        // Prepare WhatsApp URL with pre-filled message
+        let phone = "254722868475"; // Kenya country code + number, no '+' sign
+        let message = `New sales submission:\nName: ${formData.name}\nAmount: ${formData.amount}`;
+        let whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
-        alert("Sales report saved successfully!");
+        // Show success text
+        document.getElementById('response').innerText = "Submitted successfully! Opening WhatsApp...";
 
-        // Prepare WhatsApp message
-        const message = 
-          `📋 Sales Report\n` +
-          `Item: ${item}\n` +
-          `Quantity: ${quantity}\n` +
-          `Amount: KES ${amount}`;
+        // Open WhatsApp chat in a new tab
+        window.open(whatsappUrl, '_blank');
 
-        // Open WhatsApp chat with prefilled message
-        const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-        window.open(whatsappURL, "_blank");
-      } catch (error) {
-        alert("Error submitting form: " + error.message);
+        // Reset the form
+        e.target.reset();
+
+      } catch (err) {
+        document.getElementById('response').innerText = "Error: " + err;
       }
     });
   </script>
