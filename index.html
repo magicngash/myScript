@@ -1,51 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sales Reporting</title>
+  <title>Sales Form</title>
 </head>
 <body>
-  <h1>Sales Form</h1>
+  <h2>Sales Report</h2>
   <form id="salesForm">
-    <input type="text" name="name" placeholder="Name" required><br><br>
-    <input type="number" name="amount" placeholder="Amount" required><br><br>
+    <label>Date: <input type="date" name="Date" required></label><br><br>
+    <label>Salesperson: <input type="text" name="Salesperson" required></label><br><br>
+    <label>Product: <input type="text" name="Product" required></label><br><br>
+    <label>Quantity: <input type="number" name="Quantity" required></label><br><br>
+    <label>Price: <input type="number" name="Price" step="0.01" required></label><br><br>
+    <label>Total: <input type="number" name="Total" step="0.01" required></label><br><br>
     <button type="submit">Submit</button>
   </form>
 
-  <p id="response"></p>
-
   <script>
-    document.getElementById('salesForm').addEventListener('submit', async function (e) {
+    const webAppUrl = "https://script.google.com/macros/s/AKfycbwpBJ4uM9TH6nLgQi9s01rfwAvZSCU2L3IK29_YSfiUas9W86AfLLUl8vddctDMEdNGHA/exec"; // Replace with your Google Apps Script URL
+    const ownerPhone = "254722868475"; // Replace with the owner WhatsApp number in international format
+
+    document.getElementById('salesForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
-      let formData = {
-        name: e.target.name.value,
-        amount: e.target.amount.value
-      };
+      const formData = new FormData(e.target);
+      const data = {};
+      formData.forEach((value, key) => data[key] = value);
 
+      // Send data to Google Sheets
       try {
-        await fetch("https://script.google.com/macros/s/AKfycbwrhfxOESAeo-a_65_-hUcgLTvuvCPwSx-TPM_Tq8BigdL66lq2A8TS6gx3MNbFkQ/exec", {
-          method: "POST",
-          mode: "no-cors", // Prevent CORS block
-          body: JSON.stringify(formData)
+        await fetch(webAppUrl, {
+          method: 'POST',
+          mode: 'no-cors',  // bypass CORS restrictions
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
-
-        // Prepare WhatsApp URL with pre-filled message
-        let phone = "254722868475"; // Kenya country code + number, no '+' sign
-        let message = `New sales submission:\nName: ${formData.name}\nAmount: ${formData.amount}`;
-        let whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-
-        // Show success text
-        document.getElementById('response').innerText = "Submitted successfully! Opening WhatsApp...";
-
-        // Open WhatsApp chat in a new tab
-        window.open(whatsappUrl, '_blank');
-
-        // Reset the form
-        e.target.reset();
-
-      } catch (err) {
-        document.getElementById('response').innerText = "Error: " + err;
+      } catch (error) {
+        alert('Error sending data: ' + error);
+        return;
       }
+
+      // Prepare WhatsApp message
+      const message = encodeURIComponent(
+        `New Sales Report:\n` +
+        `Date: ${data.Date}\n` +
+        `Salesperson: ${data.Salesperson}\n` +
+        `Product: ${data.Product}\n` +
+        `Quantity: ${data.Quantity}\n` +
+        `Price: ${data.Price}\n` +
+        `Total: ${data.Total}`
+      );
+
+      // Open WhatsApp chat with pre-filled message
+      const waUrl = `https://wa.me/${ownerPhone}?text=${message}`;
+      window.open(waUrl, '_blank');
+
+      // Reset form after submission
+      e.target.reset();
+      alert('Sales data submitted and WhatsApp message ready.');
     });
   </script>
 </body>
