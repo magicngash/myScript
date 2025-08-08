@@ -1,54 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Simple Sales Report Form</title>
+  <title>Sales Report Form</title>
 </head>
 <body>
-  <h2>Sales Report Form</h2>
+  <h2>Sales Report</h2>
   <form id="salesForm">
-    <label>Date: <input type="date" id="date" required /></label><br /><br />
-    <label>Salesperson: <input type="text" id="salesperson" required /></label><br /><br />
-    <label>Product: <input type="text" id="product" required /></label><br /><br />
-    <label>Quantity: <input type="number" id="quantity" min="1" required /></label><br /><br />
-    <label>Price per item: <input type="number" id="price" min="0" step="0.01" required /></label><br /><br />
+    <label>Date:</label>
+    <input type="date" name="Date" required><br><br>
+
+    <label>Salesperson:</label>
+    <input type="text" name="Salesperson" required><br><br>
+
+    <label>Product:</label>
+    <input type="text" name="Product" required><br><br>
+
+    <label>Quantity:</label>
+    <input type="number" name="Quantity" required><br><br>
+
+    <label>Price:</label>
+    <input type="number" step="0.01" name="Price" required><br><br>
+
+    <label>Total:</label>
+    <input type="number" step="0.01" name="Total" required><br><br>
+
     <button type="submit">Submit</button>
   </form>
 
   <script>
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbzTV2zDr-Xn3gL9Zslyf6DR2rVpr1dlxQBvTStOek1a342osMSN0NMAQ0V6NnqL_wQ/exec";  // Replace this with your deployed Google Apps Script Web App URL
+    document.getElementById("salesForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = {};
+      formData.forEach((value, key) => data[key] = value);
 
-    document.getElementById("salesForm").addEventListener("submit", function (event) {
-      event.preventDefault();
-
-      const date = document.getElementById("date").value;
-      const salesperson = document.getElementById("salesperson").value.trim();
-      const product = document.getElementById("product").value.trim();
-      const quantity = parseInt(document.getElementById("quantity").value);
-      const price = parseFloat(document.getElementById("price").value);
-      const total = quantity * price;
-
-      const formData = { date, salesperson, product, quantity, price, total };
-
-      fetch(webAppUrl, {
+      fetch("YOUR_WEB_APP_URL", {
         method: "POST",
-        body: JSON.stringify(formData),
-        headers: { "Content-Type": "application/json" }
+        body: JSON.stringify(data)
       })
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.status === "success") {
-            alert("Sales record added successfully!");
-            document.getElementById("salesForm").reset();
-          } else {
-            alert("Error: " + data.message);
-          }
-        })
-        .catch((error) => {
-          alert("Failed to send data. Check console.");
-          console.error(error);
-        });
+      .then(res => res.text())
+      .then(response => alert(response))
+      .catch(err => alert("Error: " + err));
     });
   </script>
 </body>
