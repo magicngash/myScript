@@ -1,67 +1,372 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sales Form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Data Entry</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-weight: 300;
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        input[readonly] {
+            background-color: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 1px solid #e9ecef;
+        }
+
+        .config-section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h2>Sales Report</h2>
-  <form id="salesForm">
-    <label>Date: <input type="date" name="Date" required></label><br><br>
-    <label>Salesperson: <input type="text" name="Salesperson" required></label><br><br>
-    <label>Product: <input type="text" name="Product" required></label><br><br>
-    <label>Quantity: <input type="number" name="Quantity" required></label><br><br>
-    <label>Price: <input type="number" name="Price" step="0.01" required></label><br><br>
-    <label>Total: <input type="number" name="Total" step="0.01" required></label><br><br>
+    <div class="container">
+        <h1>Sales Data Entry</h1>
+        
+        <!-- Configuration Section -->
+        <div class="config-section">
+            <h3>Configuration</h3>
+            <div class="form-group">
+                <label for="gas-url">Google Apps Script Web App URL:</label>
+                <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
+            </div>
+            <div class="form-group">
+                <label for="whatsapp-number">WhatsApp Phone Number (with country code):</label>
+                <input type="tel" id="whatsapp-number" placeholder="1234567890">
+            </div>
+        </div>
 
-    <button type="button" id="sendToSheets">Send to Google Sheets</button>
-    <button type="button" id="sendToWhatsApp">Send WhatsApp Message</button>
-  </form>
+        <!-- Sales Data Form -->
+        <form id="sales-form">
+            <div class="form-group">
+                <label for="date">Date:</label>
+                <input type="date" id="date" required>
+            </div>
 
-  <script>
-    const webAppUrl = "https://script.google.com/macros/s/AKfycbxTcwpg3zUfb7yLgZ7kkygeyW_MS1X64ehi28lDveCAUmMYoJk2JAO8oiRPWIWLwMl6Iw/exec"; // Replace with your Google Apps Script URL
-    const ownerPhone = "254722868475"; // Replace with WhatsApp number
+            <div class="form-group">
+                <label for="salesperson">Salesperson:</label>
+                <input type="text" id="salesperson" required>
+            </div>
 
-    const form = document.getElementById('salesForm');
+            <div class="form-group">
+                <label for="product">Product:</label>
+                <input type="text" id="product" required>
+            </div>
 
-    // Helper: get form data as object
-    function getFormData() {
-      const formData = new FormData(form);
-      const data = {};
-      formData.forEach((value, key) => data[key] = value);
-      return data;
-    }
+            <div class="form-group">
+                <label for="quantity">Quantity:</label>
+                <input type="number" id="quantity" min="1" step="1" required>
+            </div>
 
-    // Send data to Google Sheets
-    document.getElementById('sendToSheets').addEventListener('click', async () => {
-      const data = getFormData();
-      try {
-        await fetch(webAppUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
+            <div class="form-group">
+                <label for="price">Price per Unit ($):</label>
+                <input type="number" id="price" min="0" step="0.01" required>
+            </div>
+
+            <div class="form-group">
+                <label for="total">Total ($):</label>
+                <input type="number" id="total" step="0.01" readonly>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary">Submit to Google Sheets</button>
+                <button type="button" id="whatsapp-btn" class="btn-secondary">Send via WhatsApp</button>
+            </div>
+        </form>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        // Configuration variables
+        let GAS_WEB_APP_URL = '';
+        let WHATSAPP_PHONE_NUMBER = '';
+
+        // DOM elements
+        const form = document.getElementById('sales-form');
+        const gasUrlInput = document.getElementById('gas-url');
+        const whatsappNumberInput = document.getElementById('whatsapp-number');
+        const quantityInput = document.getElementById('quantity');
+        const priceInput = document.getElementById('price');
+        const totalInput = document.getElementById('total');
+        const whatsappBtn = document.getElementById('whatsapp-btn');
+        const statusDiv = document.getElementById('status');
+
+        // Set default date to today
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Load saved configuration
+        loadConfiguration();
+
+        // Save configuration when changed
+        gasUrlInput.addEventListener('input', saveConfiguration);
+        whatsappNumberInput.addEventListener('input', saveConfiguration);
+
+        // Auto-calculate total when quantity or price changes
+        quantityInput.addEventListener('input', calculateTotal);
+        priceInput.addEventListener('input', calculateTotal);
+
+        // Form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!GAS_WEB_APP_URL) {
+                showStatus('Please configure the Google Apps Script URL first.', 'error');
+                return;
+            }
+
+            const salesData = getSalesData();
+            
+            try {
+                showStatus('Submitting data...', 'success');
+                
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(salesData)
+                });
+
+                if (response.ok) {
+                    showStatus('Data submitted successfully!', 'success');
+                    form.reset();
+                    document.getElementById('date').valueAsDate = new Date();
+                } else {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Error submitting data:', error);
+                showStatus('Error submitting data. Please try again.', 'error');
+            }
         });
-        alert("Data sent to Google Sheets!");
-      } catch (error) {
-        alert("Error sending to Google Sheets: " + error);
-      }
-    });
 
-    // Open WhatsApp with message
-    document.getElementById('sendToWhatsApp').addEventListener('click', () => {
-      const data = getFormData();
-      const message = encodeURIComponent(
-        `New Sales Report:\n` +
-        `Date: ${data.Date}\n` +
-        `Salesperson: ${data.Salesperson}\n` +
-        `Product: ${data.Product}\n` +
-        `Quantity: ${data.Quantity}\n` +
-        `Price: ${data.Price}\n` +
-        `Total: ${data.Total}`
-      );
-      const waUrl = `https://wa.me/${ownerPhone}?text=${message}`;
-      window.open(waUrl, '_blank');
-    });
-  </script>
+        // WhatsApp button
+        whatsappBtn.addEventListener('click', () => {
+            if (!WHATSAPP_PHONE_NUMBER) {
+                showStatus('Please configure the WhatsApp phone number first.', 'error');
+                return;
+            }
+
+            const salesData = getSalesData();
+            const message = formatWhatsAppMessage(salesData);
+            const whatsappUrl = `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE_NUMBER}&text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        });
+
+        function calculateTotal() {
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const total = quantity * price;
+            totalInput.value = total.toFixed(2);
+        }
+
+        function getSalesData() {
+            return {
+                date: document.getElementById('date').value,
+                salesperson: document.getElementById('salesperson').value,
+                product: document.getElementById('product').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                price: parseFloat(document.getElementById('price').value),
+                total: parseFloat(document.getElementById('total').value)
+            };
+        }
+
+        function formatWhatsAppMessage(data) {
+            return `📊 *SALES REPORT*\n\n` +
+                   `📅 *Date:* ${data.date}\n` +
+                   `👤 *Salesperson:* ${data.salesperson}\n` +
+                   `📦 *Product:* ${data.product}\n` +
+                   `🔢 *Quantity:* ${data.quantity}\n` +
+                   `💰 *Price per Unit:* $${data.price.toFixed(2)}\n` +
+                   `💵 *Total:* $${data.total.toFixed(2)}`;
+        }
+
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function saveConfiguration() {
+            GAS_WEB_APP_URL = gasUrlInput.value;
+            WHATSAPP_PHONE_NUMBER = whatsappNumberInput.value;
+            
+            // Save to localStorage for persistence
+            localStorage.setItem('gas_web_app_url', GAS_WEB_APP_URL);
+            localStorage.setItem('whatsapp_phone_number', WHATSAPP_PHONE_NUMBER);
+        }
+
+        function loadConfiguration() {
+            const savedGasUrl = localStorage.getItem('gas_web_app_url');
+            const savedWhatsappNumber = localStorage.getItem('whatsapp_phone_number');
+            
+            if (savedGasUrl) {
+                gasUrlInput.value = savedGasUrl;
+                GAS_WEB_APP_URL = savedGasUrl;
+            }
+            
+            if (savedWhatsappNumber) {
+                whatsappNumberInput.value = savedWhatsappNumber;
+                WHATSAPP_PHONE_NUMBER = savedWhatsappNumber;
+            }
+        }
+    </script>
 </body>
 </html>
