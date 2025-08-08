@@ -1,76 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Report</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        label {
-            display: block;
-            margin: 8px 0 4px;
-        }
-        input, button {
-            padding: 8px;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        button {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sales Reporting Form</title>
 </head>
 <body>
+  <h2>Sales Reporting</h2>
+  <form id="salesForm">
+    <label for="item">Item Sold:</label><br />
+    <input type="text" id="item" name="item" required /><br /><br />
 
-    <h2>Sales Reporting Form</h2>
-    <form id="salesForm">
-        <label>Item Sold:</label>
-        <input type="text" name="item" required>
+    <label for="quantity">Quantity:</label><br />
+    <input type="number" id="quantity" name="quantity" required /><br /><br />
 
-        <label>Quantity:</label>
-        <input type="number" name="quantity" required>
+    <label for="amount">Total Amount:</label><br />
+    <input type="number" id="amount" name="amount" step="0.01" required /><br /><br />
 
-        <label>Total Amount:</label>
-        <input type="number" name="amount" required>
+    <button type="submit">Submit & Send WhatsApp</button>
+  </form>
 
-        <button type="submit">Submit & Send to WhatsApp</button>
-    </form>
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbyUsJaiwUCZTd4u092QOsE77_ILikdDPG-CLjcLD14YDIXcVJibj5c3m7Aetj7dJDod/exec";
+    const whatsappNumber = "254722868475"; // Kenya number without '+'
 
-    <script>
-        const scriptURL = "https://script.google.com/macros/s/AKfycbyUsJaiwUCZTd4u092QOsE77_ILikdDPG-CLjcLD14YDIXcVJibj5c3m7Aetj7dJDod/exec";
-        const whatsappNumber = "254722868475"; // Kenya format without '+'
-        
-        document.getElementById("salesForm").addEventListener("submit", e => {
-            e.preventDefault();
+    document.getElementById("salesForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-            const formData = new FormData(e.target);
-            const data = {};
-            let message = "📋 Sales Report\n";
+      const item = e.target.item.value.trim();
+      const quantity = e.target.quantity.value.trim();
+      const amount = e.target.amount.value.trim();
 
-            formData.forEach((value, key) => {
-                data[key] = value;
-                message += `${key}: ${value}\n`;
-            });
+      // Prepare JSON payload
+      const payload = { item, quantity, amount };
 
-            // Send to Google Sheet
-            fetch(scriptURL, { method: "POST", body: formData })
-                .then(() => {
-                    // Open WhatsApp with pre-filled message
-                    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-                    window.open(whatsappURL, "_blank");
-                })
-                .catch(err => console.error("Error!", err));
+      try {
+        // Send JSON data to Google Apps Script
+        const response = await fetch(scriptURL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
         });
-    </script>
 
+        if (!response.ok) throw new Error("Failed to send data");
+
+        alert("Sales report saved successfully!");
+
+        // Prepare WhatsApp message
+        const message = 
+          `📋 Sales Report\n` +
+          `Item: ${item}\n` +
+          `Quantity: ${quantity}\n` +
+          `Amount: KES ${amount}`;
+
+        // Open WhatsApp chat with prefilled message
+        const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        window.open(whatsappURL, "_blank");
+      } catch (error) {
+        alert("Error submitting form: " + error.message);
+      }
+    });
+  </script>
 </body>
 </html>
