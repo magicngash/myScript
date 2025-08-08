@@ -139,19 +139,7 @@
             border: 1px solid #f5c6cb;
         }
 
-        .config-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            border: 1px solid #e9ecef;
-        }
 
-        .config-section h3 {
-            margin-bottom: 15px;
-            color: #495057;
-            font-size: 1.1rem;
-        }
 
         @media (max-width: 600px) {
             .container {
@@ -173,18 +161,7 @@
     <div class="container">
         <h1>Sales Data Entry</h1>
         
-        <!-- Configuration Section -->
-        <div class="config-section">
-            <h3>Configuration</h3>
-            <div class="form-group">
-                <label for="gas-url">Google Apps Script Web App URL:</label>
-                <input type="url" id="gas-url" placeholder="https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec">
-            </div>
-            <div class="form-group">
-                <label for="whatsapp-number">WhatsApp Phone Number (with country code):</label>
-                <input type="tel" id="whatsapp-number" placeholder="1234567890">
-            </div>
-        </div>
+
 
         <!-- Sales Data Form -->
         <form id="sales-form">
@@ -229,13 +206,11 @@
 
     <script>
         // Configuration variables
-        let GAS_WEB_APP_URL = '';
-        let WHATSAPP_PHONE_NUMBER = '';
+        let GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxyk7cGWfZ_AX66dvCEayZU_D-oFptUhbRFutfXybCbxsXe1mlO0xs9Q-C99712t0wE/exec';
+        let WHATSAPP_PHONE_NUMBER = '254722868475';
 
         // DOM elements
         const form = document.getElementById('sales-form');
-        const gasUrlInput = document.getElementById('gas-url');
-        const whatsappNumberInput = document.getElementById('whatsapp-number');
         const quantityInput = document.getElementById('quantity');
         const priceInput = document.getElementById('price');
         const totalInput = document.getElementById('total');
@@ -245,13 +220,6 @@
         // Set default date to today
         document.getElementById('date').valueAsDate = new Date();
 
-        // Load saved configuration
-        loadConfiguration();
-
-        // Save configuration when changed
-        gasUrlInput.addEventListener('input', saveConfiguration);
-        whatsappNumberInput.addEventListener('input', saveConfiguration);
-
         // Auto-calculate total when quantity or price changes
         quantityInput.addEventListener('input', calculateTotal);
         priceInput.addEventListener('input', calculateTotal);
@@ -259,11 +227,6 @@
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            if (!GAS_WEB_APP_URL) {
-                showStatus('Please configure the Google Apps Script URL first.', 'error');
-                return;
-            }
 
             const salesData = getSalesData();
             
@@ -293,11 +256,6 @@
 
         // WhatsApp button
         whatsappBtn.addEventListener('click', () => {
-            if (!WHATSAPP_PHONE_NUMBER) {
-                showStatus('Please configure the WhatsApp phone number first.', 'error');
-                return;
-            }
-
             const salesData = getSalesData();
             const message = formatWhatsAppMessage(salesData);
             const whatsappUrl = `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE_NUMBER}&text=${encodeURIComponent(message)}`;
@@ -341,30 +299,6 @@
                 setTimeout(() => {
                     statusDiv.style.display = 'none';
                 }, 3000);
-            }
-        }
-
-        function saveConfiguration() {
-            GAS_WEB_APP_URL = gasUrlInput.value;
-            WHATSAPP_PHONE_NUMBER = whatsappNumberInput.value;
-            
-            // Save to localStorage for persistence
-            localStorage.setItem('gas_web_app_url', GAS_WEB_APP_URL);
-            localStorage.setItem('whatsapp_phone_number', WHATSAPP_PHONE_NUMBER);
-        }
-
-        function loadConfiguration() {
-            const savedGasUrl = localStorage.getItem('gas_web_app_url');
-            const savedWhatsappNumber = localStorage.getItem('whatsapp_phone_number');
-            
-            if (savedGasUrl) {
-                gasUrlInput.value = savedGasUrl;
-                GAS_WEB_APP_URL = savedGasUrl;
-            }
-            
-            if (savedWhatsappNumber) {
-                whatsappNumberInput.value = savedWhatsappNumber;
-                WHATSAPP_PHONE_NUMBER = savedWhatsappNumber;
             }
         }
     </script>
