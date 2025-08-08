@@ -12,34 +12,44 @@
     <label>Quantity: <input type="number" name="Quantity" required></label><br><br>
     <label>Price: <input type="number" name="Price" step="0.01" required></label><br><br>
     <label>Total: <input type="number" name="Total" step="0.01" required></label><br><br>
-    <button type="submit">Submit</button>
+
+    <button type="button" id="sendToSheets">Send to Google Sheets</button>
+    <button type="button" id="sendToWhatsApp">Send WhatsApp Message</button>
   </form>
 
   <script>
     const webAppUrl = "https://script.google.com/macros/s/AKfycbxTcwpg3zUfb7yLgZ7kkygeyW_MS1X64ehi28lDveCAUmMYoJk2JAO8oiRPWIWLwMl6Iw/exec"; // Replace with your Google Apps Script URL
-    const ownerPhone = "254722868475"; // Replace with the owner WhatsApp number in international format
+    const ownerPhone = "254722868475"; // Replace with WhatsApp number
 
-    document.getElementById('salesForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
+    const form = document.getElementById('salesForm');
 
-      const formData = new FormData(e.target);
+    // Helper: get form data as object
+    function getFormData() {
+      const formData = new FormData(form);
       const data = {};
       formData.forEach((value, key) => data[key] = value);
+      return data;
+    }
 
-      // Send data to Google Sheets
+    // Send data to Google Sheets
+    document.getElementById('sendToSheets').addEventListener('click', async () => {
+      const data = getFormData();
       try {
         await fetch(webAppUrl, {
           method: 'POST',
-          mode: 'no-cors',  // bypass CORS restrictions
+          mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
         });
+        alert("Data sent to Google Sheets!");
       } catch (error) {
-        alert('Error sending data: ' + error);
-        return;
+        alert("Error sending to Google Sheets: " + error);
       }
+    });
 
-      // Prepare WhatsApp message
+    // Open WhatsApp with message
+    document.getElementById('sendToWhatsApp').addEventListener('click', () => {
+      const data = getFormData();
       const message = encodeURIComponent(
         `New Sales Report:\n` +
         `Date: ${data.Date}\n` +
@@ -49,14 +59,8 @@
         `Price: ${data.Price}\n` +
         `Total: ${data.Total}`
       );
-
-      // Open WhatsApp chat with pre-filled message
       const waUrl = `https://wa.me/${ownerPhone}?text=${message}`;
       window.open(waUrl, '_blank');
-
-      // Reset form after submission
-      e.target.reset();
-      alert('Sales data submitted and WhatsApp message ready.');
     });
   </script>
 </body>
