@@ -1,46 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Sales Report Form</title>
+  <title>Sales Reporting</title>
 </head>
 <body>
-  <h2>Sales Report</h2>
+  <h1>Sales Form</h1>
   <form id="salesForm">
-    <label>Date:</label>
-    <input type="date" name="Date" required><br><br>
-
-    <label>Salesperson:</label>
-    <input type="text" name="Salesperson" required><br><br>
-
-    <label>Product:</label>
-    <input type="text" name="Product" required><br><br>
-
-    <label>Quantity:</label>
-    <input type="number" name="Quantity" required><br><br>
-
-    <label>Price:</label>
-    <input type="number" step="0.01" name="Price" required><br><br>
-
-    <label>Total:</label>
-    <input type="number" step="0.01" name="Total" required><br><br>
-
+    <input type="text" name="name" placeholder="Name" required><br><br>
+    <input type="number" name="amount" placeholder="Amount" required><br><br>
     <button type="submit">Submit</button>
   </form>
 
-  <script>
-    document.getElementById("salesForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const data = {};
-      formData.forEach((value, key) => data[key] = value);
+  <p id="response"></p>
 
-      fetch("https://https://script.google.com/macros/s/AKfycbwsGdAaIw5bTqevHwmOjoPeNtUZqQODJH0k-ZOaCBBY7FTW-AzOIzIfsMwoBK3MOR4X/exec", {
-        method: "POST",
-        body: JSON.stringify(data)
-      })
-      .then(res => res.text())
-      .then(response => alert(response))
-      .catch(err => alert("Error: " + err));
+  <script>
+    document.getElementById('salesForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      let formData = {
+        name: e.target.name.value,
+        amount: e.target.amount.value
+      };
+
+      try {
+        let res = await fetch("YOUR_WEB_APP_URL", {
+          method: "POST",
+          mode: "no-cors", // Prevents CORS blocking
+          body: JSON.stringify(formData)
+        });
+
+        document.getElementById('response').innerText = "Submitted successfully!";
+      } catch (err) {
+        document.getElementById('response').innerText = "Error: " + err;
+      }
     });
   </script>
 </body>
