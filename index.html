@@ -1,39 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sales Reporting</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        label {
+            display: block;
+            margin: 8px 0 4px;
+        }
+        input, button {
+            padding: 8px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
 </head>
 <body>
-  <h1>Sales Form</h1>
-  <form id="salesForm">
-    <input type="text" name="name" placeholder="Name" required><br><br>
-    <input type="number" name="amount" placeholder="Amount" required><br><br>
-    <button type="submit">Submit</button>
-  </form>
 
-  <p id="response"></p>
+    <h2>Sales Reporting Form</h2>
+    <form id="salesForm">
+        <label>Item Sold:</label>
+        <input type="text" name="item" required>
 
-  <script>
-    document.getElementById('salesForm').addEventListener('submit', async function (e) {
-      e.preventDefault();
+        <label>Quantity:</label>
+        <input type="number" name="quantity" required>
 
-      let formData = {
-        name: e.target.name.value,
-        amount: e.target.amount.value
-      };
+        <label>Total Amount:</label>
+        <input type="number" name="amount" required>
 
-      try {
-        let res = await fetch("https://script.google.com/macros/s/AKfycbyUsJaiwUCZTd4u092QOsE77_ILikdDPG-CLjcLD14YDIXcVJibj5c3m7Aetj7dJDod/exec", {
-          method: "POST",
-          mode: "no-cors", // Prevents CORS blocking
-          body: JSON.stringify(formData)
+        <button type="submit">Submit & Send to WhatsApp</button>
+    </form>
+
+    <script>
+        const scriptURL = "https://script.google.com/macros/s/AKfycbyUsJaiwUCZTd4u092QOsE77_ILikdDPG-CLjcLD14YDIXcVJibj5c3m7Aetj7dJDod/exec";
+        const whatsappNumber = "254722868475"; // Kenya format without '+'
+        
+        document.getElementById("salesForm").addEventListener("submit", e => {
+            e.preventDefault();
+
+            const formData = new FormData(e.target);
+            const data = {};
+            let message = "📋 Sales Report\n";
+
+            formData.forEach((value, key) => {
+                data[key] = value;
+                message += `${key}: ${value}\n`;
+            });
+
+            // Send to Google Sheet
+            fetch(scriptURL, { method: "POST", body: formData })
+                .then(() => {
+                    // Open WhatsApp with pre-filled message
+                    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+                    window.open(whatsappURL, "_blank");
+                })
+                .catch(err => console.error("Error!", err));
         });
+    </script>
 
-        document.getElementById('response').innerText = "Submitted successfully!";
-      } catch (err) {
-        document.getElementById('response').innerText = "Error: " + err;
-      }
-    });
-  </script>
 </body>
 </html>
