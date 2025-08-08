@@ -34,7 +34,7 @@
       const data = {};
       formData.forEach((value, key) => data[key] = value);
 
-      fetch("YOUR_WEB_APP_URL", {
+      fetch("https://script.google.com/macros/s/AKfycbwrhfxOESAeo-a_65_-hUcgLTvuvCPwSx-TPM_Tq8BigdL66lq2A8TS6gx3MNbFkQ/exec", {
         method: "POST",
         body: JSON.stringify(data)
       })
