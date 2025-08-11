@@ -1,306 +1,740 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Data Entry</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+import React, { useState, useEffect } from 'react';
+import { 
+  User, 
+  Wallet, 
+  DollarSign, 
+  Users, 
+  FileText, 
+  Bell, 
+  LogOut,
+  Plus,
+  ArrowUpCircle,
+  CheckCircle,
+  XCircle,
+  Shield,
+  TrendingUp,
+  Menu,
+  X,
+  Eye,
+  EyeOff
+} from 'lucide-react';
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+// Simple mock API
+const mockLogin = async (phone, password) => {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Accept any non-empty phone and password
+  if (phone.trim() && password.trim()) {
+    return {
+      success: true,
+      user: {
+        id: 1,
+        firstName: 'John',
+        lastName: 'Doe',
+        phone: phone
+      }
+    };
+  }
+  throw new Error('Please enter both phone and password');
+};
 
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
+const mockData = {
+  savings: {
+    totalSavings: 75000,
+    shares: 75,
+    monthlyTarget: 10000,
+    currentMonthSavings: 8500,
+    nextDividendDate: '2025-09-01'
+  },
+  loans: {
+    activeLoan: {
+      id: 1,
+      principal: 50000,
+      totalAmount: 55000,
+      dueDate: '2025-08-31',
+      status: 'disbursed'
+    },
+    guaranteeRequests: [
+      {
+        id: 2,
+        borrower: 'Jane Smith',
+        amount: 30000,
+        guaranteeAmount: 15000,
+        purpose: 'Business expansion'
+      }
+    ]
+  }
+};
 
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 30px;
-            font-weight: 300;
-            font-size: 2rem;
-        }
+// Helper functions
+const formatCurrency = (amount) => `KES ${amount.toLocaleString()}`;
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+// Main App Component
+function App() {
+  const [user, setUser] = useState(null);
+  const [currentView, setCurrentView] = useState('login');
+  const [notifications, setNotifications] = useState([]);
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #555;
-            font-weight: 500;
-        }
+  const addNotification = (message, type = 'info') => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message, type, timestamp: new Date() }]);
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  };
 
-        input, select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e1e5e9;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: white;
-        }
+  const handleLogin = async (phone, password) => {
+    try {
+      const result = await mockLogin(phone, password);
+      setUser(result.user);
+      setCurrentView('dashboard');
+      addNotification('Welcome to Chama MVP!', 'success');
+    } catch (error) {
+      addNotification(error.message, 'error');
+      throw error;
+    }
+  };
 
-        input:focus, select:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            transform: translateY(-2px);
-        }
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentView('login');
+    addNotification('Logged out successfully', 'info');
+  };
 
-        input[readonly] {
-            background-color: #f8f9fa;
-            color: #6c757d;
-        }
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <LoginForm onLogin={handleLogin} />
+        <NotificationContainer notifications={notifications} />
+      </div>
+    );
+  }
 
-        .button-group {
-            display: flex;
-            gap: 15px;
-            margin-top: 30px;
-        }
-
-        button {
-            flex: 1;
-            padding: 14px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(37, 211, 102, 0.3);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .status {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            font-weight: 500;
-            display: none;
-        }
-
-        .status.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
-            }
-
-            .button-group {
-                flex-direction: column;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Sales Data Entry</h1>
-        
-
-
-        <!-- Sales Data Form -->
-        <form id="sales-form">
-            <div class="form-group">
-                <label for="date">Date:</label>
-                <input type="date" id="date" required>
-            </div>
-
-            <div class="form-group">
-                <label for="salesperson">Salesperson:</label>
-                <input type="text" id="salesperson" required>
-            </div>
-
-            <div class="form-group">
-                <label for="product">Product:</label>
-                <input type="text" id="product" required>
-            </div>
-
-            <div class="form-group">
-                <label for="quantity">Quantity:</label>
-                <input type="number" id="quantity" min="1" step="1" required>
-            </div>
-
-            <div class="form-group">
-                <label for="price">Price per Unit ($):</label>
-                <input type="number" id="price" min="0" step="0.01" required>
-            </div>
-
-            <div class="form-group">
-                <label for="total">Total ($):</label>
-                <input type="number" id="total" step="0.01" readonly>
-            </div>
-
-            <div class="button-group">
-                <button type="submit" class="btn-primary">Submit to Google Sheets</button>
-                <button type="button" id="whatsapp-btn" class="btn-secondary">Send via WhatsApp</button>
-            </div>
-        </form>
-
-        <div id="status" class="status"></div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <MainApp 
+        user={user}
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        onLogout={handleLogout}
+        addNotification={addNotification}
+      />
+      <NotificationContainer notifications={notifications} />
     </div>
+  );
+}
 
-    <script>
-        // Configuration variables
-        let GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxyk7cGWfZ_AX66dvCEayZU_D-oFptUhbRFutfXybCbxsXe1mlO0xs9Q-C99712t0wE/exec';
-        let WHATSAPP_PHONE_NUMBER = '254722868475';
+// Login Form Component
+function LoginForm({ onLogin }) {
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-        // DOM elements
-        const form = document.getElementById('sales-form');
-        const quantityInput = document.getElementById('quantity');
-        const priceInput = document.getElementById('price');
-        const totalInput = document.getElementById('total');
-        const whatsappBtn = document.getElementById('whatsapp-btn');
-        const statusDiv = document.getElementById('status');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await onLogin(phone, password);
+    } catch (error) {
+      // Error is handled in parent component
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        // Set default date to today
-        document.getElementById('date').valueAsDate = new Date();
+  return (
+    <div className="flex items-center justify-center min-h-screen py-12 px-4">
+      <div className="max-w-md w-full">
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center mb-8">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="mt-6 text-3xl font-bold text-gray-900">Welcome to Chama MVP</h2>
+            <p className="mt-2 text-sm text-gray-600">Enter any phone number and password to continue</p>
+          </div>
 
-        // Auto-calculate total when quantity or price changes
-        quantityInput.addEventListener('input', calculateTotal);
-        priceInput.addEventListener('input', calculateTotal);
-
-        // Form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const salesData = getSalesData();
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your phone number"
+                required
+              />
+            </div>
             
-            try {
-                showStatus('Submitting data...', 'success');
-                
-                const response = await fetch(GAS_WEB_APP_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(salesData)
-                });
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+                </button>
+              </div>
+            </div>
 
-                if (response.ok) {
-                    showStatus('Data submitted successfully!', 'success');
-                    form.reset();
-                    document.getElementById('date').valueAsDate = new Date();
-                } else {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            } catch (error) {
-                console.error('Error submitting data:', error);
-                showStatus('Error submitting data. Please try again.', 'error');
-            }
-        });
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 font-medium"
+            >
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
 
-        // WhatsApp button
-        whatsappBtn.addEventListener('click', () => {
-            const salesData = getSalesData();
-            const message = formatWhatsAppMessage(salesData);
-            const whatsappUrl = `https://web.whatsapp.com/send?phone=${WHATSAPP_PHONE_NUMBER}&text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-        });
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Demo:</strong> Enter any phone number and password to access the application.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
-        function calculateTotal() {
-            const quantity = parseFloat(quantityInput.value) || 0;
-            const price = parseFloat(priceInput.value) || 0;
-            const total = quantity * price;
-            totalInput.value = total.toFixed(2);
-        }
+// Main App Layout
+function MainApp({ user, currentView, setCurrentView, onLogout, addNotification }) {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-        function getSalesData() {
-            return {
-                date: document.getElementById('date').value,
-                salesperson: document.getElementById('salesperson').value,
-                product: document.getElementById('product').value,
-                quantity: parseInt(document.getElementById('quantity').value),
-                price: parseFloat(document.getElementById('price').value),
-                total: parseFloat(document.getElementById('total').value)
-            };
-        }
+  const navigation = [
+    { name: 'Dashboard', id: 'dashboard', icon: TrendingUp },
+    { name: 'Savings', id: 'savings', icon: Wallet },
+    { name: 'Loans', id: 'loans', icon: DollarSign },
+    { name: 'Members', id: 'members', icon: Users },
+    { name: 'Reports', id: 'reports', icon: FileText }
+  ];
 
-        function formatWhatsAppMessage(data) {
-            return `📊 *SALES REPORT*\n\n` +
-                   `📅 *Date:* ${data.date}\n` +
-                   `👤 *Salesperson:* ${data.salesperson}\n` +
-                   `📦 *Product:* ${data.product}\n` +
-                   `🔢 *Quantity:* ${data.quantity}\n` +
-                   `💰 *Price per Unit:* $${data.price.toFixed(2)}\n` +
-                   `💵 *Total:* $${data.total.toFixed(2)}`;
-        }
+  return (
+    <div className="h-screen flex overflow-hidden bg-gray-100">
+      {/* Mobile sidebar */}
+      <div className={`fixed inset-0 flex z-40 md:hidden ${sidebarOpen ? '' : 'hidden'}`}>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
+        <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="absolute top-0 right-0 -mr-12 pt-2">
+            <button onClick={() => setSidebarOpen(false)} className="ml-1 flex items-center justify-center h-10 w-10 rounded-full">
+              <X className="h-6 w-6 text-white" />
+            </button>
+          </div>
+          <Sidebar navigation={navigation} currentView={currentView} setCurrentView={setCurrentView} user={user} onLogout={onLogout} />
+        </div>
+      </div>
 
-        function showStatus(message, type) {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
-            statusDiv.style.display = 'block';
-            
-            if (type === 'success') {
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 3000);
-            }
-        }
-    </script>
-</body>
-</html>
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex md:flex-shrink-0">
+        <div className="flex flex-col w-64">
+          <Sidebar navigation={navigation} currentView={currentView} setCurrentView={setCurrentView} user={user} onLogout={onLogout} />
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex flex-col w-0 flex-1 overflow-hidden">
+        <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
+        <main className="flex-1 relative overflow-y-auto focus:outline-none">
+          <div className="py-6">
+            {currentView === 'dashboard' && <Dashboard addNotification={addNotification} />}
+            {currentView === 'savings' && <SavingsView addNotification={addNotification} />}
+            {currentView === 'loans' && <LoansView addNotification={addNotification} />}
+            {currentView === 'members' && <MembersView />}
+            {currentView === 'reports' && <ReportsView />}
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+// Sidebar Component
+function Sidebar({ navigation, currentView, setCurrentView, user, onLogout }) {
+  return (
+    <div className="flex flex-col h-full bg-gradient-to-b from-blue-800 to-indigo-900">
+      <div className="flex items-center h-16 flex-shrink-0 px-4 bg-blue-900">
+        <Users className="h-8 w-8 text-blue-200" />
+        <span className="ml-2 text-xl font-bold text-white">Chama MVP</span>
+      </div>
+      
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        <div className="px-3 mt-6">
+          <div className="flex items-center px-3 py-2 text-sm font-medium text-blue-200">
+            <User className="h-5 w-5 mr-3" />
+            {user.firstName} {user.lastName}
+          </div>
+        </div>
+        
+        <nav className="mt-5 px-2 space-y-1">
+          {navigation.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => setCurrentView(item.id)}
+              className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md w-full text-left transition-colors duration-200 ${
+                currentView === item.id
+                  ? 'bg-blue-700 text-white'
+                  : 'text-blue-200 hover:bg-blue-700 hover:text-white'
+              }`}
+            >
+              <item.icon className="mr-3 h-5 w-5" />
+              {item.name}
+            </button>
+          ))}
+        </nav>
+      </div>
+      
+      <div className="flex-shrink-0 p-4">
+        <button
+          onClick={onLogout}
+          className="group flex items-center px-2 py-2 text-sm font-medium text-blue-200 hover:bg-blue-700 hover:text-white rounded-md w-full text-left transition-colors duration-200"
+        >
+          <LogOut className="mr-3 h-5 w-5" />
+          Sign out
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Header Component
+function Header({ user, onMenuClick }) {
+  return (
+    <div className="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+      <button
+        onClick={onMenuClick}
+        className="px-4 border-r border-gray-200 text-gray-500 focus:outline-none md:hidden"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+      
+      <div className="flex-1 px-4 flex justify-between items-center">
+        <h1 className="text-xl font-semibold text-gray-900">Welcome back, {user.firstName}!</h1>
+        <Bell className="h-6 w-6 text-gray-400" />
+      </div>
+    </div>
+  );
+}
+
+// Dashboard Component
+function Dashboard({ addNotification }) {
+  const { savings, loans } = mockData;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-gray-500">Overview of your chama activity</p>
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <StatCard title="Total Savings" value={formatCurrency(savings.totalSavings)} icon={Wallet} color="blue" />
+        <StatCard title="Shares Owned" value={savings.shares} icon={TrendingUp} color="green" />
+        <StatCard title="Active Loan" value={formatCurrency(loans.activeLoan.totalAmount)} icon={DollarSign} color="yellow" />
+        <StatCard title="Guarantee Requests" value={loans.guaranteeRequests.length} icon={Shield} color="purple" />
+      </div>
+
+      {/* Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Savings Progress */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Monthly Savings Progress</h3>
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span>Current Month</span>
+                <span>{formatCurrency(savings.currentMonthSavings)} / {formatCurrency(savings.monthlyTarget)}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(savings.currentMonthSavings / savings.monthlyTarget) * 100}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-500">Next dividend: {savings.nextDividendDate}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Guarantee Requests */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Guarantee Requests</h3>
+            {loans.guaranteeRequests.map((request) => (
+              <div key={request.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">{request.borrower}</p>
+                    <p className="text-sm text-gray-500">Amount: {formatCurrency(request.amount)}</p>
+                    <p className="text-sm text-gray-500">Your guarantee: {formatCurrency(request.guaranteeAmount)}</p>
+                    <p className="text-sm text-gray-500">Purpose: {request.purpose}</p>
+                  </div>
+                  <div className="flex space-x-2 ml-4">
+                    <button
+                      onClick={() => addNotification('Guarantee approved successfully', 'success')}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => addNotification('Guarantee rejected', 'info')}
+                      className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Stat Card Component
+function StatCard({ title, value, icon: Icon, color }) {
+  const colors = {
+    blue: 'text-blue-600 bg-blue-50',
+    green: 'text-green-600 bg-green-50',
+    yellow: 'text-yellow-600 bg-yellow-50',
+    purple: 'text-purple-600 bg-purple-50'
+  };
+
+  return (
+    <div className="bg-white overflow-hidden shadow rounded-lg">
+      <div className="p-5">
+        <div className="flex items-center">
+          <div className={`p-3 rounded-full ${colors[color]}`}>
+            <Icon className="h-6 w-6" />
+          </div>
+          <div className="ml-5 w-0 flex-1">
+            <dt className="text-sm font-medium text-gray-500 truncate">{title}</dt>
+            <dd className="text-lg font-medium text-gray-900">{value}</dd>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Savings View Component
+function SavingsView({ addNotification }) {
+  const [showModal, setShowModal] = useState(false);
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Savings</h1>
+          <p className="mt-1 text-sm text-gray-500">Manage your savings and track progress</p>
+        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Make Deposit
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+        <StatCard title="Total Savings" value={formatCurrency(75000)} icon={Wallet} color="blue" />
+        <StatCard title="Shares Owned" value="75" icon={TrendingUp} color="green" />
+        <StatCard title="Share Value" value={formatCurrency(1000)} icon={DollarSign} color="purple" />
+      </div>
+
+      {showModal && <DepositModal onClose={() => setShowModal(false)} addNotification={addNotification} />}
+    </div>
+  );
+}
+
+// Deposit Modal Component
+function DepositModal({ onClose, addNotification }) {
+  const [amount, setAmount] = useState('');
+  const [phone, setPhone] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    addNotification('Deposit initiated! Check your phone for M-Pesa prompt.', 'success');
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Make Deposit</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (KES)</label>
+            <input
+              type="number"
+              required
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter amount"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              type="tel"
+              required
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="254XXXXXXXXX"
+            />
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Initiate Payment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// Loans View Component
+function LoansView({ addNotification }) {
+  const { activeLoan } = mockData.loans;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Loans</h1>
+        <p className="mt-1 text-sm text-gray-500">Manage your loans and guarantees</p>
+      </div>
+
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Active Loan</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Principal Amount</dt>
+              <dd className="mt-1 text-xl font-semibold text-gray-900">{formatCurrency(activeLoan.principal)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Total Amount Due</dt>
+              <dd className="mt-1 text-xl font-semibold text-gray-900">{formatCurrency(activeLoan.totalAmount)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-gray-500">Due Date</dt>
+              <dd className="mt-1 text-xl font-semibold text-gray-900">{new Date(activeLoan.dueDate).toLocaleDateString()}</dd>
+            </div>
+          </div>
+          <button
+            onClick={() => addNotification('Loan repayment initiated!', 'success')}
+            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+          >
+            <ArrowUpCircle className="h-4 w-4 mr-2" />
+            Repay Loan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Members View Component
+function MembersView() {
+  const members = [
+    { id: 1, name: 'John Doe', phone: '+254700123456', savings: 75000, shares: 75 },
+    { id: 2, name: 'Jane Smith', phone: '+254701234567', savings: 45000, shares: 45 },
+    { id: 3, name: 'Bob Johnson', phone: '+254702345678', savings: 62000, shares: 62 },
+    { id: 4, name: 'Alice Brown', phone: '+254703456789', savings: 38000, shares: 38 }
+  ];
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Members</h1>
+        <p className="mt-1 text-sm text-gray-500">View all chama members</p>
+      </div>
+
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Member</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Savings</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shares</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {members.map((member) => (
+              <tr key={member.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                      <User className="h-6 w-6 text-gray-600" />
+                    </div>
+                    <div className="ml-4 text-sm font-medium text-gray-900">{member.name}</div>
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{member.phone}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{formatCurrency(member.savings)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{member.shares}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// Reports View Component
+function ReportsView() {
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
+        <p className="mt-1 text-sm text-gray-500">Financial and activity reports</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        <StatCard title="Total Members" value="4" icon={Users} color="blue" />
+        <StatCard title="Total Savings" value={formatCurrency(220000)} icon={Wallet} color="green" />
+        <StatCard title="Active Loans" value="1" icon={DollarSign} color="yellow" />
+        <StatCard title="Monthly Growth" value="12.5%" icon={TrendingUp} color="purple" />
+      </div>
+
+      <div className="bg-white shadow rounded-lg">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">Financial Summary</h3>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Income</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Member Contributions</span>
+                  <span className="text-sm font-medium">{formatCurrency(45000)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Loan Interest</span>
+                  <span className="text-sm font-medium">{formatCurrency(5000)}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Expenses</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Operating Costs</span>
+                  <span className="text-sm font-medium">{formatCurrency(2000)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Transaction Fees</span>
+                  <span className="text-sm font-medium">{formatCurrency(500)}</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Net Position</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Net Income</span>
+                  <span className="text-sm font-medium text-green-600">{formatCurrency(47500)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Cash Balance</span>
+                  <span className="text-sm font-medium">{formatCurrency(170000)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Notification Container Component
+function NotificationContainer({ notifications }) {
+  if (!notifications.length) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2">
+      {notifications.map((notification) => (
+        <div
+          key={notification.id}
+          className={`max-w-sm w-full bg-white shadow-lg rounded-lg border-l-4 ${
+            notification.type === 'success' ? 'border-green-400' : 
+            notification.type === 'error' ? 'border-red-400' : 'border-blue-400'
+          }`}
+        >
+          <div className="p-4">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {notification.type === 'success' && <CheckCircle className="h-5 w-5 text-green-400" />}
+                {notification.type === 'error' && <XCircle className="h-5 w-5 text-red-400" />}
+                {notification.type === 'info' && <Bell className="h-5 w-5 text-blue-400" />}
+              </div>
+              <div className="ml-3 w-0 flex-1">
+                <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  {notification.timestamp.toLocaleTimeString()}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default App;
